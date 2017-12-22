@@ -1,4 +1,4 @@
-class dataset_:
+class dataset_helper:
     """Creates input and output and batch creation method.
     Keeps track of which inputs have been used for a batch, randomizes the batch
     if most elements have been used
