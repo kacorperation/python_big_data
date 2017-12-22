@@ -28,8 +28,10 @@ class dataset_helper:
 							to 0 if the output is time invariant
 	
 	attributes:
-		self.train_percentage:	which features from dataframe will be used for inputs. Is a 
-								list of strings of the form ['var_1', 'var_2, ...]
+		self.train_percentage:	which percent of the data will be used for training. For example,
+								train_percentage = 0.9 means 90% of the data will be used for 
+								training, and 1 - 0.9 = 0.1 = 10% of the data will be used
+								for testing
 								
 		self.backpropagation:	How many time steps back does an output roughly depend on? Set this
 								to 0 if the output is time invariant
