@@ -2,17 +2,31 @@ class dataset_:
     """Creates input and output and batch creation method.
     Keeps track of which inputs have been used for a batch, randomizes the batch
     if most elements have been used
+	
+	inputs:
+	df: a dataframe
+	training_elements: 	which features from dataframe will be used for inputs. Is a 
+						list of strings of the form ['var_1', 'var_2, ...]
+						
+	output_features:	which features from dataframe will be used for outputs. Is a 
+						list of strings of the form ['var_1', 'var_2, ...]
+						
+	train_percentage:	which percent of the data will be used for training. For example,
+						train_percentage = 0.9 means 90% of the data will be used for 
+						training, and 1 - 0.9 = 0.1 = 10% of the data will be used
+						for testing
+						
+	backpropagation:	How many time steps back does an output roughly depend on? Set this
+						to 1 if the output is time invariant
     """
-    def __init__(self, df, train_percentage, backpropagation = 30):
+    def __init__(self, df, input_features, output_features, 
+	train_percentage, backpropagation = 30):
         self.train_percentage = train_percentage
         self.backpropagation = backpropagation
-        self.input = df[['SPOT_TENOR', 'LIMIT_TENOR', 'rfq', 'rfs', 'BUY', 'SELL', 
-                   'CANCELLED', 'DONE', 'PENDING', 'RFS_PENDING', 'TRADE_DONE', 
-                   'TIME_DELTA', 'CURRENCY_1_AMT', 'POS1_AMT', 'POS2_AMT',
-                   'LAST_RATE', 'TRADE_RATE']]
+        self.input = df[input_features]
         self.input = pd.DataFrame.as_matrix(self.input)
         
-        self.output = df[['TRADE_DONE_NEXT_HOUR']]
+        self.output = df[output_features]
         self.output = pd.DataFrame.as_matrix(self.output)
         #force output to be 0 or 1, useful for cross entropy and classification
         
