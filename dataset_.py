@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Dec 21 17:38:44 2017
-
-@author: K.Ataman
-"""
-
 class dataset_:
     """Creates input and output and batch creation method.
     Keeps track of which inputs have been used for a batch, randomizes the batch
@@ -52,3 +45,37 @@ class dataset_:
         #indexes to determine which training and testing variables we are at
         self.training_index = 0
         self.testing_index  = 0
+    def create_batch(self, batch_size, training = True):
+        """creates a batch for training, where
+        output_x = np.zeros([batch_size,self.backpropagation,self.num_features_input])
+        output_y = np.zeros([batch_size,self.num_features_output])
+        """
+        #Do we want training data or testing data?
+        output_x = np.zeros([batch_size,self.backpropagation,self.num_features_input])
+        output_y = np.zeros([batch_size,self.num_features_output])
+        if training == True:
+            #do we have enough training variables left for the batch this size?
+            if self.training_index + batch_size > self.num_inputs_train:
+                #pick randomly
+                chosen = np.random.choice(self.training_set, batch_size, replace = False)
+            else:
+                chosen = self.training_set[self.training_index:self.training_index + batch_size]
+            for batch_element in range(batch_size):
+                for backprop in range(self.backpropagation):
+                    output_x[batch_element, backprop] = self.input[chosen[batch_element] + backprop]
+                output_y[batch_element] = self.output[chosen[batch_element]]
+            self.training_index += 1
+            return output_x, output_y
+        #testing mode
+        else:
+            if self.testing_index + batch_size > self.num_inputs_train:
+                chosen = np.random.choice(self.testing_set, batch_size, replace = False)
+            else:
+                chosen = self.testing_set[self.testing_index:self.testing_index + batch_size]
+            for batch_element in range(batch_size):
+                for backprop in range(self.backpropagation):
+                    output_x[batch_element, backprop] = self.input[
+                        chosen[batch_element] + backprop]
+                output_y[batch_element] = self.output[chosen[batch_element]]
+            self.testing_index += 1
+            return output_x, output_y
