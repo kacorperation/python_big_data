@@ -1,6 +1,9 @@
 """
 TODO:
 	Take care of batch creation when backpropagation = 0
+	Normalization, softerization etc, specified per feature
+	Training and testing set data selection methods 
+	Batch data selection methods
 """
 
 class dataset_helper:
@@ -9,20 +12,51 @@ class dataset_helper:
     if most elements have been used
 	
 	inputs:
-	df: a dataframe
-	training_elements: 	which features from dataframe will be used for inputs. Is a 
-						list of strings of the form ['var_1', 'var_2, ...]
-						
-	output_features:	which features from dataframe will be used for outputs. Is a 
-						list of strings of the form ['var_1', 'var_2, ...]
-						
-	train_percentage:	which percent of the data will be used for training. For example,
-						train_percentage = 0.9 means 90% of the data will be used for 
-						training, and 1 - 0.9 = 0.1 = 10% of the data will be used
-						for testing
-						
-	backpropagation:	How many time steps back does an output roughly depend on? Set this
-						to 0 if the output is time invariant
+		df: a dataframe
+		training_elements: 	which features from dataframe will be used for inputs. Is a 
+							list of strings of the form ['var_1', 'var_2, ...]
+							
+		output_features:	which features from dataframe will be used for outputs. Is a 
+							list of strings of the form ['var_1', 'var_2, ...]
+							
+		train_percentage:	which percent of the data will be used for training. For example,
+							train_percentage = 0.9 means 90% of the data will be used for 
+							training, and 1 - 0.9 = 0.1 = 10% of the data will be used
+							for testing
+							
+		backpropagation:	How many time steps back does an output roughly depend on? Set this
+							to 0 if the output is time invariant
+	
+	attributes:
+		self.train_percentage:	which features from dataframe will be used for inputs. Is a 
+								list of strings of the form ['var_1', 'var_2, ...]
+								
+		self.backpropagation:	How many time steps back does an output roughly depend on? Set this
+								to 0 if the output is time invariant
+		
+		self.input:				Matrix of shape [element, input_feature] that holds inputs
+		
+		self.num_features_input:Number of features of the input
+		
+		self.output:			Matrix of shape [element, input_feature] that holds outputs
+		
+		self.num_features_output:Number of features of the output
+		
+		self.num_inputs: 		How many elements the dataset has
+		
+		self.num_inputs_train:	How many elements are in the training set
+		
+		self.num_inputs_test:	How many elements are in the testing set
+		
+		self.training_set:		An array of size [self.num_inputs_train] that holds the 
+								indices of the elements used for training
+		
+		self.testing_set:		An array of size [self.num_inputs_train] that holds the 
+								indices of the elements used for testing
+		
+		self.training_index:	Index for self.training_set
+		
+		self.testing_index:		Index for self.testing_set
     """
     def __init__(self, df, input_features, output_features, 
 	train_percentage, backpropagation = 30):
@@ -46,7 +80,7 @@ class dataset_helper:
         data_indices = np.zeros([self.num_inputs], dtype = np.int)
         #make sure the last backpropagation elements are not selected for 
         #training and testing, as they are a pain to deal with
-        for i in range (self.num_inputs - self.backpropagation - 1):
+        for i in range (self.num_inputs - self.backpropagation):
             data_indices[i] = i
         '''
         create I/O of the form
