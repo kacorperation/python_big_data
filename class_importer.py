@@ -4,6 +4,11 @@ Created on Thu Dec 21 17:39:18 2017
 
 @author: K.Ataman
 """
+
+"""
+TODO:
+	have a special version for importing from online repos
+"""
 '''
 path = "C:/Users/K.Ataman/Documents/GitHub/python_big_data/dataset_.py"
 file = "dataset_"

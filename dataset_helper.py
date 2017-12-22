@@ -1,3 +1,8 @@
+"""
+TODO:
+	Take care of batch creation when backpropagation = 0
+"""
+
 class dataset_helper:
     """Creates input and output and batch creation method.
     Keeps track of which inputs have been used for a batch, randomizes the batch
@@ -17,7 +22,7 @@ class dataset_helper:
 						for testing
 						
 	backpropagation:	How many time steps back does an output roughly depend on? Set this
-						to 1 if the output is time invariant
+						to 0 if the output is time invariant
     """
     def __init__(self, df, input_features, output_features, 
 	train_percentage, backpropagation = 30):
