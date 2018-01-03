@@ -1,16 +1,13 @@
 """
 TODO:
-    Take care of batch creation when backpropagation = 0
-    Normalization, softerization etc, specified per feature
-	 Training and testing set data selection methods 
-	 Batch data selection methods (epoch, batch, mini-batches etc)
+    Test this
 """
 
 
 import pandas as pd
 import numpy as np
 
-class dataset_helper:
+class dataframe_helper:
     """Creates input and output and batch creation method.
     Keeps track of which inputs have been used for a batch, randomizes the batch
     if most elements have been used
@@ -39,15 +36,19 @@ class dataset_helper:
 								
 		self.backpropagation:	How many time steps back does an output roughly depend on? Set this
 								to 0 if the output is time invariant
-                                
+                    
       self.num_features_input:Number of features of the input                          
 		
+      self.input_features:    List of Names of columns of the input
+      
 		self.input_matrix:				Matrix of shape [element, self.num_features_input] 
                             that holds inputs
 		
 		
         
       self.num_features_output:Number of features of the output
+      
+      self.output_features:    List of Names of columns of the output
 		
 		self.output_matrix:	          Matrix of shape [element, self.num_features_output] 
                             that holds outputs
@@ -62,11 +63,15 @@ class dataset_helper:
     """
     def __init__(self, df, input_features, output_features, 
 	train_percentage, backpropagation = 0):
+        """If there are no input/output feature names, just set 
+        input/output_features to [0,1,...,N]"""
         self.train_percentage = train_percentage
         self.backpropagation = backpropagation
+        self.input_features = input_features
         self.input_matrix = df[input_features]
         self.input_matrix = pd.DataFrame.as_matrix(self.input_matrix)
         
+        self.output_features = output_features
         self.output_matrix = df[output_features]
         self.output_matrix = pd.DataFrame.as_matrix(self.output_matrix)
         #force output to be 0 or 1, useful for cross entropy and classification
@@ -121,6 +126,8 @@ class dataset_helper:
         #indexes to determine which training and testing variables we are at
         self.training_index = 0
         self.testing_index  = 0
+        
+        
     def create_batch(self, batch_size, training = True):
         """creates a batch for training, with the shapes
         output_x = [batch_size, self.backpropagation, self.num_features_input] if backprop > 0
@@ -186,3 +193,52 @@ class dataset_helper:
                 counter += 1
                 
         return output_x, output_y
+
+    def normalizer(self, input_features_norm = [], output_features_norm = [], 
+                   normalization_method = 'standard_score'):
+        """
+        Normalizes features in input/output_features_norm in 
+        self.input/output_matrix based on given method
+        inputs:
+            input/output_features_norm:
+                a list of names of features to be normalized of the form ['feature1',...,'featureN']
+                these tell which input/output features need to be normalized
+        """
+        if input_features_norm != []:
+            for feature in input_features_norm:
+                self.input_matrix[self.input_features.index(feature)] = self.normalizer_helper(
+                        self.input_matrix[self.input_features.index(feature)], feature, normalization_method)
+        if output_features_norm != []:
+            for feature in output_features_norm:
+                self.output_matrix[self.output_features.index(feature)] = self.normalizer_helper(
+                        self.output_matrix[self.output_features.index(feature)], feature, normalization_method)
+    
+    def normalizer_helper(norm_array, feature, method):
+        if method == 'standard_score':
+            expected_value = np.average(norm_array)
+            variance = np.var(norm_array)
+            for i in range(norm_array.shape[0]):
+                norm_array[i] = (norm_array[i] - expected_value) / variance
+        elif method == 'feature_scaling':
+            minimum = np.amin(norm_array)
+            maximum = np.amax(norm_array)
+            min_max = maximum-minimum
+            for i in range(norm_array.shape[0]):
+                norm_array[i] = (norm_array[i] - minimum)/min_max
+        elif method == 'boolean_classification':
+            expected_value = np.average(norm_array)
+            for i in range(norm_array.shape[0]):
+                if norm_array[i] <= expected_value:
+                    norm_array[i] = 0
+                else:
+                    norm_array[i] = 1
+        elif method == 'soft_boolean_classification':
+            expected_value = np.average(norm_array)
+            for i in range(norm_array.shape[0]):
+                if norm_array[i] <= expected_value:
+                    norm_array[i] = 0.1
+                else:
+                    norm_array[i] = 0.9
+        else:
+            raise ValueError('put an appropriate normalization_method')
+        return norm_array
