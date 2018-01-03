@@ -216,11 +216,12 @@ class dataframe_helper:
                 self.output_matrix[self.output_features.index(feature)] = \
                     self.normalizer_helper(1, feature,  normalization_method)
     
-    def normalizer_helper(self, in_or_out, feature, method):
-        if in_or_out == 0:
+    def normalizer_helper(self, input_or_output, feature, method):
+        if input_or_output == 0:
             norm_array = self.input_matrix[self.input_features.index(feature)]
         else:
             norm_array = self.output_matrix[self.output_features.index(feature)]
+            
         if method == 'standard_score':
             expected_value = np.average(norm_array)
             variance = np.var(norm_array)
