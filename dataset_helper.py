@@ -1,6 +1,6 @@
 """
 TODO:
-    Test this
+    NOTHING! HOORAY!
 """
 
 
@@ -64,7 +64,9 @@ class dataframe_helper:
     def __init__(self, df, input_features, output_features, 
 	train_percentage, backpropagation = 0):
         """If there are no input/output feature names, just set 
-        input/output_features to [0,1,...,N]"""
+        input/output_features to [0,1,...,N]
+        
+        Set train_percentage to 1 if you don't want to split the data"""
         self.train_percentage = train_percentage
         self.backpropagation = backpropagation
         self.input_features = input_features
@@ -114,14 +116,14 @@ class dataframe_helper:
             data_indices = np.random.choice(data_indices, self.num_inputs, replace = False)
             #training_set is indices of elements self.input_matrix & 
             #self.output_matrix that will be used for training
-            self.training_indices = data_indices[0:self.num_inputs_train]
-            self.testing_indices  = data_indices[self.num_inputs_train : self.num_inputs_train + self.num_inputs_test]
+            self.training_indices = data_indices[0:self.num_inputs_train].astype(int)
+            self.testing_indices  = data_indices[self.num_inputs_train : self.num_inputs_train + self.num_inputs_test].astype(int)
         elif training_data_selection_method == 'first':
-            self.training_indices = data_indices[0:self.num_inputs_train]
-            self.testing_indices  = data_indices[self.num_inputs_train : self.num_inputs]
+            self.training_indices = data_indices[0:self.num_inputs_train].astype(int)
+            self.testing_indices  = data_indices[self.num_inputs_train : self.num_inputs].astype(int)
         elif training_data_selection_method == 'last':
-            self.training_indices = data_indices[self.num_inputs-self.num_inputs_train:self.num_inputs]
-            self.testing_indices  = data_indices[0 : self.num_inputs-self.num_inputs_train]
+            self.training_indices = data_indices[self.num_inputs-self.num_inputs_train:self.num_inputs].astype(int)
+            self.testing_indices  = data_indices[0 : self.num_inputs-self.num_inputs_train].astype(int)
         
         #indexes to determine which training and testing variables we are at
         self.training_index = 0
@@ -129,10 +131,11 @@ class dataframe_helper:
         
         
     def create_batch(self, batch_size, training = True):
-        """creates a batch for training, with the shapes
-        output_x = [batch_size, self.backpropagation, self.num_features_input] if backprop > 0
-        output_x = [batch_size, self.num_features_input] if backprop = 0
-        output_y = [batch_size, self.num_features_output]
+        """creates a batch for training. Requires  training_and_testing_elements_picker to have been run.
+        Outputs:
+            output_x = [batch_size, self.backpropagation, self.num_features_input] if backprop > 0
+            output_x = [batch_size, self.num_features_input] if backprop = 0
+            output_y = [batch_size, self.num_features_output]
         """
         """
         Reminder:
@@ -178,7 +181,7 @@ class dataframe_helper:
             while counter < batch_size:
                 #if batch exceeds the number of elements, stop creating batches. 
                 #program will return zeros for elements after epoch is complete
-                if self.testing_index + counter + self.backpropagation > self.num_inputs_testing:
+                if self.testing_index + counter + self.backpropagation > self.num_inputs_test:
                     self.testing_index = 0
                     break
                 for i in range(batch_size):
@@ -206,14 +209,18 @@ class dataframe_helper:
         """
         if input_features_norm != []:
             for feature in input_features_norm:
-                self.input_matrix[self.input_features.index(feature)] = self.normalizer_helper(
-                        self.input_matrix[self.input_features.index(feature)], feature, normalization_method)
+                self.input_matrix[self.input_features.index(feature)] = \
+                    self.normalizer_helper(0, feature, normalization_method)
         if output_features_norm != []:
             for feature in output_features_norm:
-                self.output_matrix[self.output_features.index(feature)] = self.normalizer_helper(
-                        self.output_matrix[self.output_features.index(feature)], feature, normalization_method)
+                self.output_matrix[self.output_features.index(feature)] = \
+                    self.normalizer_helper(1, feature,  normalization_method)
     
-    def normalizer_helper(norm_array, feature, method):
+    def normalizer_helper(self, in_or_out, feature, method):
+        if in_or_out == 0:
+            norm_array = self.input_matrix[self.input_features.index(feature)]
+        else:
+            norm_array = self.output_matrix[self.output_features.index(feature)]
         if method == 'standard_score':
             expected_value = np.average(norm_array)
             variance = np.var(norm_array)
@@ -242,3 +249,14 @@ class dataframe_helper:
         else:
             raise ValueError('put an appropriate normalization_method')
         return norm_array
+
+
+"""
+testing:
+    df = pd.DataFrame(np.random.randn(50, 4), columns=list('ABCD'))
+    foobar = dataframe_helper(df, ['A', 'B'], ['C','D'], 0.9, 2)
+    foobar.normalizer(['A','B'])
+    foobar.normalizer([],['C','D'], 'feature_scaling')
+    foobar.training_and_testing_elements_picker()
+    print (foobar.create_batch(2))
+"""
