@@ -4,9 +4,10 @@ Useful classes and modules for big data analytics
 
 v 1.0:
 -----
-dataset_helper:
+dataframe_helper:
   
-* Helps create dataset and batches from the said dataset for unsupervised ML 
+* Helps create dataframe and batches from the said dataframe for unsupervised ML 
+* Has methods to normalize each feature of the dataframe
     
 class_importer:
     

@@ -131,7 +131,8 @@ class dataframe_helper:
         
         
     def create_batch(self, batch_size, training = True):
-        """creates a batch for training. Requires  training_and_testing_elements_picker to have been run.
+        """creates a batch for training. Shuffles order of selection once an epoch has been completed
+        Requires  training_and_testing_elements_picker to have been run.
         Outputs:
             output_x = [batch_size, self.backpropagation, self.num_features_input] if backprop > 0
                 Note: [batch_size, 0] is the EARLIEST time step in the backpropagation
@@ -164,6 +165,9 @@ class dataframe_helper:
                 #program will return zeros for elements after epoch is complete
                 if self.training_index + counter + self.backpropagation > self.num_inputs_train:
                     self.training_index = 0
+                    #re-randomize data selection so you don't pick same things in the same order, but
+                    #instead pick same things in different order
+                    self.training_indices = np.random.shuffle(self.training_indices)
                     break
                 for i in range(batch_size):
                     self.training_index = i
@@ -184,6 +188,9 @@ class dataframe_helper:
                 #program will return zeros for elements after epoch is complete
                 if self.testing_index + counter + self.backpropagation > self.num_inputs_test:
                     self.testing_index = 0
+                    #re-randomize data selection so you don't pick same things in the same order, but
+                    #instead pick same things in different order
+                    self.testing_indices = np.random.shuffle(self.testing_indices)
                     break
                 for i in range(batch_size):
                     self.testing_index = i
