@@ -134,6 +134,7 @@ class dataframe_helper:
         """creates a batch for training. Requires  training_and_testing_elements_picker to have been run.
         Outputs:
             output_x = [batch_size, self.backpropagation, self.num_features_input] if backprop > 0
+                Note: [batch_size, 0] is the EARLIEST time step in the backpropagation
             output_x = [batch_size, self.num_features_input] if backprop = 0
             output_y = [batch_size, self.num_features_output]
         """
