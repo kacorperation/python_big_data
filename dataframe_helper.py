@@ -1,6 +1,8 @@
 """
 TODO:
-    NOTHING! HOORAY!
+    backprop > 0 has wrong batch outputs
+        Also the last row of batch created is just zeros if batch=num_inputs_train
+    Consider the scenario where the input sets for training and testing are different
 """
 
 
@@ -80,11 +82,17 @@ class dataframe_helper:
         
         
         self.num_inputs  = self.input_matrix.shape[0]
-        self.num_features_input = self.input_matrix.shape[1]
-        self.num_features_output = self.output_matrix.shape[1]
+        try:
+            self.num_features_input = self.input_matrix.shape[1]
+        except:
+            self.num_features_input = 1
+        try:
+            self.num_features_output = self.output_matrix.shape[1]
+        except:
+            self.num_features_output = 1
         self.num_inputs_train = int(self.train_percentage * self.num_inputs)
-        self.num_inputs_test  = self.num_inputs - self.num_inputs_train - self.backpropagation - 1
-        
+        self.num_inputs_test  = self.num_inputs - self.num_inputs_train - self.backpropagation
+        #self.num_inputs_test  = self.num_inputs - self.num_inputs_train - self.backpropagation - 1
     def training_and_testing_elements_picker(self, training_data_selection_method = 'random'):
         """
         Creates an array of indices to be used for training and testing 
@@ -117,12 +125,12 @@ class dataframe_helper:
             #training_set is indices of elements self.input_matrix & 
             #self.output_matrix that will be used for training
             self.training_indices = data_indices[0:self.num_inputs_train].astype(int)
-            self.testing_indices  = data_indices[self.num_inputs_train : self.num_inputs_train + self.num_inputs_test].astype(int)
+            self.testing_indices  = data_indices[self.num_inputs_train : self.num_inputs_train + self.num_inputs_test + 1].astype(int)
         elif training_data_selection_method == 'first':
             self.training_indices = data_indices[0:self.num_inputs_train].astype(int)
-            self.testing_indices  = data_indices[self.num_inputs_train : self.num_inputs].astype(int)
+            self.testing_indices  = data_indices[self.num_inputs_train : self.num_inputs + 1].astype(int)
         elif training_data_selection_method == 'last':
-            self.training_indices = data_indices[self.num_inputs-self.num_inputs_train:self.num_inputs].astype(int)
+            self.training_indices = data_indices[self.num_inputs-self.num_inputs_train:self.num_inputs + 1].astype(int)
             self.testing_indices  = data_indices[0 : self.num_inputs-self.num_inputs_train].astype(int)
         
         #indexes to determine which training and testing variables we are at
@@ -135,7 +143,7 @@ class dataframe_helper:
         Requires  training_and_testing_elements_picker to have been run.
         Outputs:
             output_x = [batch_size, self.backpropagation, self.num_features_input] if backprop > 0
-                Note: [batch_size, 0] is the EARLIEST time step in the backpropagation
+                Note: [batch_size, 0] is the LATEST time step in the backpropagation
             output_x = [batch_size, self.num_features_input] if backprop = 0
             output_y = [batch_size, self.num_features_output]
         """
@@ -158,50 +166,49 @@ class dataframe_helper:
         
         #are we training?
         if training == True:
-            # batch_size < num_inputs_train
-            counter = 0
-            while counter < batch_size:
+            for i in range(batch_size):
+                self.training_index = i
                 #if batch exceeds the number of elements, stop creating batches. 
                 #program will return zeros for elements after epoch is complete
-                if self.training_index + counter + self.backpropagation > self.num_inputs_train:
+                if self.training_index + i > self.num_inputs_train + 1:
                     self.training_index = 0
                     #re-randomize data selection so you don't pick same things in the same order, but
                     #instead pick same things in different order
-                    self.training_indices = np.random.shuffle(self.training_indices)
+                    self.training_indices = np.random.choice(self.training_indices, self.num_inputs_train, replace = False)
                     break
-                for i in range(batch_size):
-                    self.training_index = i
-                    output_y[i] = self.output_matrix[self.training_indices[self.training_index]]
+                output_y[i] = self.output_matrix[self.training_indices[self.training_index]]
+                if self.backpropagation > 0:
                     for j in range(self.backpropagation):
-                        if self.backpropagation > 0:
+                        if j == 0:
                             output_x[i, j] = self.input_matrix[self.training_indices[self.training_index]]
                         else:
-                            output_x[i] = self.input_matrix[self.training_indices[self.training_index]]
-                        self.training_index +=1
-                counter += 1
+                            output_x[i, j] = self.input_matrix[self.training_indices[self.training_index - j]]
+                else:
+                    output_x[i] = self.input_matrix[self.training_indices[self.training_index]]
+                self.training_index +=1
 
         #we are testing        
         else:
-            counter = 0
-            while counter < batch_size:
+           for i in range(batch_size):
+                self.testing_index = i
                 #if batch exceeds the number of elements, stop creating batches. 
                 #program will return zeros for elements after epoch is complete
-                if self.testing_index + counter + self.backpropagation > self.num_inputs_test:
+                if self.testing_index + i  > self.num_inputs_test + 1:
                     self.testing_index = 0
                     #re-randomize data selection so you don't pick same things in the same order, but
                     #instead pick same things in different order
-                    self.testing_indices = np.random.shuffle(self.testing_indices)
+                    self.testing_indices = np.random.choice(self.testing_indices, self.num_inputs_test, replace = False)
                     break
-                for i in range(batch_size):
-                    self.testing_index = i
-                    output_y[i] = self.output_matrix[self.testing_indices[self.testing_index]]
+                output_y[i] = self.output_matrix[self.testing_indices[self.testing_index]]
+                if self.backpropagation > 0:
                     for j in range(self.backpropagation):
-                        if self.backpropagation > 0:
+                        if j == 0:
                             output_x[i, j] = self.input_matrix[self.testing_indices[self.testing_index]]
                         else:
-                            output_x[i] = self.input_matrix[self.testing_indices[self.testing_index]]
-                        self.testing_index +=1
-                counter += 1
+                            output_x[i, j] = self.input_matrix[self.testing_indices[self.testing_index - j]]
+                else:
+                    output_x[i] = self.input_matrix[self.testing_indices[self.testing_index]]
+                self.testing_index +=1
                 
         return output_x, output_y
 
@@ -217,19 +224,18 @@ class dataframe_helper:
         """
         if input_features_norm != []:
             for feature in input_features_norm:
-                self.input_matrix[self.input_features.index(feature)] = \
+                self.input_matrix[: , self.input_features.index(feature)] = \
                     self.normalizer_helper(0, feature, normalization_method)
         if output_features_norm != []:
             for feature in output_features_norm:
-                self.output_matrix[self.output_features.index(feature)] = \
+                self.output_matrix[: , self.output_features.index(feature)] = \
                     self.normalizer_helper(1, feature,  normalization_method)
     
     def normalizer_helper(self, input_or_output, feature, method):
         if input_or_output == 0:
-            norm_array = self.input_matrix[self.input_features.index(feature)]
+            norm_array = self.input_matrix[:, self.input_features.index(feature)]
         else:
-            norm_array = self.output_matrix[self.output_features.index(feature)]
-            
+            norm_array = self.output_matrix[:, self.output_features.index(feature)]     
         if method == 'standard_score':
             expected_value = np.average(norm_array)
             variance = np.var(norm_array)
@@ -258,14 +264,16 @@ class dataframe_helper:
         else:
             raise ValueError('put an appropriate normalization_method')
         return norm_array
-
+        
 
 """
-testing:
-    df = pd.DataFrame(np.random.randn(50, 4), columns=list('ABCD'))
-    foobar = dataframe_helper(df, ['A', 'B'], ['C','D'], 0.9, 2)
-    foobar.normalizer(['A','B'])
-    foobar.normalizer([],['C','D'], 'feature_scaling')
-    foobar.training_and_testing_elements_picker()
-    print (foobar.create_batch(2))
+#testing:
+np.random.seed(12)
+df = pd.DataFrame(np.random.randn(5, 4), columns=list('ABCD'))
+foobar = dataframe_helper(df, ['A', 'B', 'C'], ['D'], 0.6, 2)
+foobar.normalizer(['A', 'B'])
+foobar.normalizer([],['D'], 'feature_scaling')
+foobar.training_and_testing_elements_picker()
+output = foobar.create_batch(foobar.num_inputs_train)
+print (output)
 """
