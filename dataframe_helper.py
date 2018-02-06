@@ -1,7 +1,5 @@
 """
 TODO:
-    backprop > 0 has wrong batch outputs
-        Also the last row of batch created is just zeros if batch=num_inputs_train
     Consider the scenario where the input sets for training and testing are different
 """
 
