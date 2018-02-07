@@ -174,8 +174,9 @@ class dataframe_helper:
                         #re-randomize data selection so you don't pick same things in the same order, but
                         #instead pick same things in different order
                         self.training_indices = np.random.choice(self.training_indices, self.num_inputs_train, replace = False)
-                    output_y[i] = self.output_matrix[self.training_indices[self.training_index]]
+                    
                     if self.backpropagation > 0:
+                        output_y[i] = self.output_matrix[self.training_indices[self.training_index] + self.backpropagation - 1]
                         for j in range(self.backpropagation):
                             if j == 0:
                                 output_x[i, j] = self.input_matrix[self.training_indices[self.training_index]]
@@ -184,6 +185,7 @@ class dataframe_helper:
                                 output_x[i,j] = self.input_matrix[index]
                     else:
                         output_x[i] = self.input_matrix[self.training_indices[self.training_index]]
+                        output_y[i] = self.output_matrix[self.training_indices[self.training_index]]
                     self.training_index += 1
     
             #we are testing        
@@ -196,8 +198,9 @@ class dataframe_helper:
                         #re-randomize data selection so you don't pick same things in the same order, but
                         #instead pick same things in different order
                         self.testing_indices = np.random.choice(self.testing_indices, self.num_inputs_test, replace = False)
-                    output_y[i] = self.output_matrix[self.testing_indices[self.testing_index]]
+                    output_y[i] = self.output_matrix[self.testing_indices[self.testing_index] + self.backpropagation - 1]
                     if self.backpropagation > 0:
+                        output_y[i] = self.output_matrix[self.testing_indices[self.testing_index] + self.backpropagation - 1]
                         for j in range(self.backpropagation):
                             if j == 0:
                                 output_x[i, j] = self.input_matrix[self.testing_indices[self.testing_index]]
@@ -206,6 +209,7 @@ class dataframe_helper:
                                 output_x[i,j] = self.input_matrix[index]
                     else:
                         output_x[i] = self.input_matrix[self.testing_indices[self.testing_index]]
+                        output_y[i] = self.output_matrix[self.testing_indices[self.testing_index]]
                     self.testing_index += 1
                     
             return output_x, output_y
